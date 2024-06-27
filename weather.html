@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Weather App </title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+	integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+
+	<style>
+		input {
+			background: none;
+			border: none;
+			outline: 0;
+			border-bottom: 1px solid black;
+		}
+
+		::placeholder {
+			color: black;
+			font-weight: bold;
+		}
+
+		.card button,
+		.btncross {
+			background: rgba(0, 0, 0, 0.1) !important;
+		}
+
+		body {
+			overflow: hidden;
+		}
+
+		.card img {
+			width: 70px;
+			height: 70px;
+			margin: auto;
+			margin-top: 10px;
+			box-shadow: 0px 0px 10px 2px #ccc;
+		}
+
+		.pointer {
+			cursor: pointer;
+		}
+
+		.hilightDivCss {
+		  box-shadow: blue 0px 0px 0px 2px inset, rgb(255, 255, 255) 10px -10px 0px -3px, rgb(31, 193, 27) 10px -10px, rgb(255, 255, 255) 20px -20px 0px -3px, rgb(255, 217, 19) 20px -20px, rgb(255, 255, 255) 30px -30px 0px -3px, rgb(255, 156, 85) 30px -30px, rgb(255, 255, 255) 40px -40px 0px -3px, rgb(255, 85, 85) 40px -40px;
+/*            box-shadow: 0px 0px 10px 2px #ccc;*/
+background: rgba(0, 0, 0, 0.2);
+}
+
+.cityDiv:focus {
+	background: rgba(0, 0, 0, 0.3) !important;
+}
+video{
+	position: absolute;
+	z-index: -9999;
+}
+.fa-solid, .fas {
+	color: white;
+	font-weight: 900;
+}
+.card button, .btncross {
+	background: rgb(0 0 0) !important;
+}
+@media only screen and (min-width: 200px) and (max-width: 567px) {
+	.box {
+		width: 100% !important;
+	}
+}
+</style>
+</head>
+
+
+<body class="sm-p-5">
+	<video playsinline autoplay muted loop poster="cake.jpg">
+		<source src="bg.mp4" type="video/webm">
+			Your browser does not support the video tag.
+		</video>
+		<div class="container sm-p-5 w-lg-50 w-50 box">
+			<form action="" class="pt-5" id="searchform">
+				<p class="pt-5 text-center">
+					<input type="search" placeholder="Enter Your City" class="py-1" name="cName">
+					<button
+					class="ms-2 px-3 py-1 bg-info-subtle border border-1 border-info-subtle btn mt-3 mt-sm-0">Submit</button>
+				</p>
+			</form>
+			<div class="pt-5 row main"></div>
+			<div class="position-absolute top-0 start-0 sideDiv">
+
+			</div>
+		</div>
+	</body>
+
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+	integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
+	crossorigin="anonymous"></script>
+
+	<script>
+		document.querySelector('#searchform').addEventListener('submit', async (event) => {
+			event.preventDefault();
+			cityName = event.target.cName.value;
+			apiurl = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=4d8fb5b93d4af21d66a2948710284366&units=metric`;
+
+			var getData = await fetch(apiurl);
+
+			if (getData.status == 404) {
+				document.querySelector('input').value = '';
+				document.querySelector('input').placeholder = 'City Not Found';
+			}
+			var getDetails = await getData.json();
+
+			var cityTem = getDetails.main.temp;
+
+			var condition = getDetails.weather[0].description;
+
+			var icon = getDetails.weather[0].icon;
+
+			var countryName = getDetails.sys.country;
+
+			var data = { cityName, cityTem, condition, icon, countryName };
+
+			checkResult = checkDetails(cityName);
+
+			if (checkResult != 1) {
+				var oldData = JSON.parse(localStorage.getItem('TemDetails')) ?? [];
+
+				var finalData = [...oldData, data];
+
+				localStorage.setItem('TemDetails', JSON.stringify(finalData));
+
+				displayData();
+			}
+			else {
+				alert('This City Already Exists');
+			}
+			event.target.reset();
+		});
+
+		displayData = () => {
+			document.querySelector('input').value = '';
+			document.querySelector('input').placeholder = 'Enter Your City';
+			var oldData = JSON.parse(localStorage.getItem('TemDetails')) ?? [];
+			document.querySelector('.main').innerHTML = '';
+			document.querySelector('.sideDiv').innerHTML = '';
+			oldData.forEach((element, i) => {
+				document.querySelector('.main').insertAdjacentHTML("afterbegin", `
+					<div class="col-lg-4 col-12 mb-4 hilightDiv">
+					<div class="card position-relative my-2 text-center pt-3">
+					<h4>${element.countryName}</h4>
+					<h5 class="card-title text-capitalize">${element.cityName}</h5>
+					<p class="card-text fw-bold">${element.cityTem}</p>
+					<img src="https://openweathermap.org/img/wn/${element.icon}@2x.png"class="card-img-top">
+					<div class="card-body">
+					<p class="text-uppercase fw-bold">${element.condition}</p>
+					</div>
+					<button class="btn position-absolute end-0 fs-5 top-0" onclick="remove(${i})"><i class="fa-solid fa-xmark"></i></button>
+					</div>
+					</div>`);
+
+				document.querySelector('.sideDiv').insertAdjacentHTML("afterbegin", `
+					<div class="bg-white py-1 ps-3 border-bottom border-1 border-secondary text-capitalize fw-bold">
+					<div class="row">
+					<div class="col-5 pointer cityDiv text-capitalize" onclick = "hightlight(${i})">
+					${element.cityName}</div>
+					<div class="col-7">
+					<button class="btn bg-danger btncross" onclick="remove(${i})"><i class="fa-solid fa-xmark"></i></button>
+					</div>
+					</div>
+					</div> 
+					`)
+			});
+
+		};
+
+		function remove(getindex) {
+			var oldData = JSON.parse(localStorage.getItem('TemDetails')) ?? [];
+			oldData.splice(getindex, 1);
+			console.log(oldData)
+			localStorage.setItem('TemDetails', JSON.stringify(oldData));
+			displayData();
+		};
+
+		function hightlight(getDivNumber) {
+			var oldData = JSON.parse(localStorage.getItem('TemDetails')) ?? [];
+			mydiv = oldData.slice(getDivNumber, getDivNumber + 1);
+			var hilightDiv = document.querySelectorAll('.hilightDiv');
+
+			hilightDiv.forEach((element, index) => {
+				element.classList.remove('hilightDivCss');
+			});
+
+			hilightDiv[oldData.length - getDivNumber - 1].classList.add('hilightDivCss');
+			document.querySelectorAll('.cityDiv')[oldData.length - getDivNumber - 1].classList.toggle('cityDivCss');
+		}
+
+		var i = 0;
+
+		function checkDetails(CityName) {
+			var oldData = JSON.parse(localStorage.getItem('TemDetails')) ?? [];
+			for (let x of oldData) {
+				if (x.cityName == CityName) {
+					i = 1;
+					return i;
+				}
+			}
+		}
+
+		displayData();
+
+	</script>
+
+	</html>
